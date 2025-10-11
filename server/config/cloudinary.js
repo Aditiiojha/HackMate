@@ -5,14 +5,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Configure the Cloudinary SDK with your credentials from .env
+
 cloudinary.config({ 
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
   api_key: process.env.CLOUDINARY_API_KEY, 
   api_secret: process.env.CLOUDINARY_API_SECRET 
 });
 
-// Set up the storage engine for Multer
+
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
