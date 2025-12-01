@@ -1,16 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { getMyGroups } from '../services/groupService';
-import { Link } from 'react-router-dom';
-import { FiGrid, FiPlusSquare } from 'react-icons/fi';
+import { Link, NavLink } from 'react-router-dom';
+import { FiUsers, FiPlusCircle, FiArrowRight, FiClock, FiCode, FiFrown, FiGrid, FiFeather } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+
+// --- Enhanced Stats Logic ---
+const getEnhancedStats = (groups) => {
+    // Mock calculation: Assuming the user is the creator of at least one of their joined groups if they have any.
+    // In a real app, you would check group.creatorId === dbUser.id
+    const teamsCreated = groups.length > 0 ? 1 : 0;
+    
+    return [
+        { label: "Your Active Teams", value: groups.length, icon: FiUsers, color: "text-indigo-400" },
+        { label: "Teams You Created", value: teamsCreated, icon: FiFeather, color: "text-green-400" },
+    ];
+};
+
+// --- Custom Components ---
+
+const StatCard = ({ label, value, icon: Icon, color }) => (
+    // Reusing the StatCard component for the metrics
+    <div className="glass-card p-6 rounded-xl border border-white/10 shadow-lg transition duration-300 hover:scale-[1.03] hover:shadow-indigo-500/30">
+        <div className="flex items-center">
+            <Icon className={`w-8 h-8 ${color} mr-4 drop-shadow-lg`} />
+            <div>
+                <p className="text-xl font-extrabold text-white">{value}</p>
+                <p className="text-sm text-gray-400 mt-1">{label}</p>
+            </div>
+        </div>
+    </div>
+);
+
+const TeamItem = ({ group }) => (
+    <NavLink to={`/groups/${group._id}`} className="group glass-card flex justify-between items-center p-4 rounded-xl mb-3 transition duration-300 hover:bg-white/10 hover:shadow-md border border-white/5">
+        <div className="flex items-center">
+            <FiCode className="w-5 h-5 text-indigo-400 mr-3" />
+            <div>
+                <p className="text-lg font-semibold text-white truncate">{group.name}</p>
+                <span className={`text-xs font-medium text-gray-400`}>
+                    Hackathon: {group.hackathonName}
+                </span>
+            </div>
+        </div>
+        <FiArrowRight className="w-5 h-5 text-gray-500 group-hover:text-indigo-300" />
+    </NavLink>
+);
 
 const Dashboard = () => {
     const { dbUser } = useAuth();
     const [myGroups, setMyGroups] = useState([]);
     const [loading, setLoading] = useState(true);
+    const enhancedStats = getEnhancedStats(myGroups);
 
     useEffect(() => {
-        // Fetch the user's groups only when we have the dbUser object
         if (dbUser) {
             const fetchUserGroups = async () => {
                 try {
@@ -19,53 +62,91 @@ const Dashboard = () => {
                     setMyGroups(groups);
                 } catch (error) {
                     console.error("Failed to fetch user's groups:", error);
+                    toast.error("Failed to load your teams.");
                 } finally {
                     setLoading(false);
                 }
             };
             fetchUserGroups();
         }
-    }, [dbUser]); // This effect runs when the dbUser is loaded
+    }, [dbUser]);
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">Welcome, {dbUser?.name}!</h1>
-                    <p className="mt-2 text-gray-600">This is your main dashboard. From here you can find new teams or manage the ones you've joined.</p>
+        <div className="min-h-screen pt-4 pb-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                {/* --- Header Section (Welcome Banner) --- */}
+                <header className="py-10 mb-8">
+                    <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-tight">
+                        Welcome Back, <span className="text-indigo-400 text-neon-glow">{dbUser?.name?.split(' ')[0] || 'Hacker'}</span>!
+                    </h1>
+                    <p className="text-xl text-gray-300 mt-2">Your personalized command center for HackMate.</p>
+                </header>
+
+                <hr className="border-t border-white/10 my-10" />
+
+                {/* --- Key Metrics / Stats Grid --- */}
+                <h2 className="text-3xl font-bold text-white mb-6">📊 Your Team Summary</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    {enhancedStats.map((stat, index) => (
+                        <StatCard key={index} {...stat} />
+                    ))}
+                    {/* Add a simple placeholder card for visual balance */}
+                    <div className="hidden lg:block glass-card p-6 rounded-xl border border-white/10 opacity-50">
+                        <p className="text-gray-500">Other metrics track here...</p>
+                    </div>
                 </div>
 
-                <div className="bg-white shadow-md rounded-lg p-6">
-                    <h2 className="text-2xl font-semibold text-gray-800 border-b pb-3 mb-4">My Teams</h2>
-                    {loading ? (
-                        <p className="text-gray-500">Loading your teams...</p>
-                    ) : myGroups.length > 0 ? (
-                        <ul className="space-y-3">
-                            {myGroups.map(group => (
-                                <li key={group._id} className="p-4 border rounded-md hover:bg-gray-50 transition-colors">
-                                    <Link to={`/groups/${group._id}`} className="flex justify-between items-center">
-                                        <div>
-                                            <p className="font-bold text-indigo-700">{group.name}</p>
-                                            <p className="text-sm text-gray-500">{group.hackathonName}</p>
-                                        </div>
-                                        <span className="text-sm font-medium bg-blue-100 text-blue-800 px-3 py-1 rounded-full">{group.status}</span>
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <div className="text-center py-8">
-                            <p className="text-gray-500 mb-4">You haven't joined any teams yet.</p>
-                            <div className="flex justify-center space-x-4">
-                                <Link to="/groups" className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                                    <FiGrid className="mr-2" /> Find a Team
-                                </Link>
-                                <Link to="/create-group" className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                                    <FiPlusSquare className="mr-2" /> Create a Team
-                                </Link>
+                {/* --- Dashboard Content Layout --- */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    
+                    {/* Column 1: Team Management (Main Focus) */}
+                    <div className="lg:col-span-2">
+                        <h2 className="text-3xl font-bold text-white mb-6">🤝 Your Active Teams</h2>
+                        
+                        {loading ? (
+                            <div className="glass-card p-6 text-center rounded-xl border border-white/10 text-gray-400">
+                                <FiClock className="mx-auto h-8 w-8 text-indigo-400 animate-spin mb-3"/>
+                                <p>Loading your teams...</p>
                             </div>
+                        ) : myGroups.length > 0 ? (
+                            <div className="space-y-4">
+                                {myGroups.map(group => (
+                                    <TeamItem key={group._id} group={group} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="glass-card p-6 text-center rounded-xl border border-white/10">
+                                <FiFrown className="mx-auto h-10 w-10 text-gray-400 mb-3"/>
+                                <p className="text-gray-300">You are not currently in any teams. Ready to jump in?</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Column 2: Quick Actions */}
+                    <div className="lg:col-span-1">
+                        <h2 className="text-3xl font-bold text-white mb-6">⚡ Quick Actions</h2>
+
+                        <div className="space-y-4">
+                            
+                            {/* Primary CTA: Create Team (Neon Button) */}
+                            <NavLink 
+                                to="/create-group" 
+                                className="btn-neon-primary w-full flex items-center justify-center space-x-2 py-3 rounded-xl transition duration-300"
+                            >
+                                <FiPlusCircle className="w-5 h-5"/> <span>Create a New Team</span>
+                            </NavLink>
+
+                            {/* Secondary CTA: Find Teams */}
+                            <NavLink 
+                                to="/groups" 
+                                className="w-full flex items-center justify-center space-x-2 py-3 bg-white/10 text-indigo-300 border border-indigo-400/50 rounded-xl transition hover:bg-white/20 hover:text-white shadow-lg"
+                            >
+                                <FiGrid className="w-5 h-5"/> <span>Explore Open Teams</span>
+                            </NavLink>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>
