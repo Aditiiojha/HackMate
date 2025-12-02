@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema(
   {
-    uid: { type: String, required: true, unique: true, index: true },  // Firebase UID
+    uid: { type: String, required: true, unique: true, index: true },  // Firebase UID
     name: { type: String, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, index: true },
     password: { type: String, select: false },
@@ -15,7 +15,18 @@ const userSchema = new mongoose.Schema(
     hackathonHistory: {
       type: [{ hackathonName: String, teamName: String, outcome: String }],
       default: []
+    },
+   
+    certificates: { 
+      type: [{ 
+        hackathonName: String,
+        issuedAt: Date,
+        fileUrl: String,
+        cloudinaryId: String,
+      }],
+      default: []
     }
+   
   },
   { timestamps: true }
 );

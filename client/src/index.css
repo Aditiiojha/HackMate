@@ -12,55 +12,115 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 2. Full-Viewport Gradient Background (Dark Navy -> Deep Purple) */
-/* The dark background is set on the html/body to cover the entire page */
+/* 2. Full-Viewport Background (Keeping the base dark) */
 @layer base {
   html, body, #root {
     min-height: 100vh;
-    background: linear-gradient(135deg, #0f172a 0%, #1c0f3d 100%); /* Tailwind: slate-900 to deep-purple */
-    color: #f8fafc; /* Default text color is light gray/white */
-    overflow-x: hidden; /* Prevent horizontal scroll due to animations/shadows */
+    /* Deep blue/black background */
+    background: linear-gradient(135deg, #02071a 0%, #170093 100%); 
+    color: #f8fafc; 
+    overflow-x: hidden; 
   }
 }
 
-/* 3. Custom Tailwind Components for Reusable Effects */
+/* --- CUSTOM ANIMATIONS (Updated Speed and Seamless Loop) --- */
+
+/* Slow Background Image Shift for depth */
+@keyframes slide-bg {
+  0% {
+    background-position: 0% 0%;
+    transform: scale(1);
+  }
+  100% {
+    background-position: 5% 5%;
+    transform: scale(1.05); 
+  }
+}
+
+.animate-bg-slow {
+  animation: slide-bg 60s ease-in-out infinite alternate;
+}
+
+/* Moving Gradient Keyframes: Continuous movement TL to BR (Fixed for Seams) */
+@keyframes gradient-shift {
+  /* Starting position (Top Left) */
+  0% {
+    background-position: 0% 0%;
+  }
+  /* Continuous movement to a distant position, ensuring no abrupt jump at 100% */
+  100% {
+    /* Moves the background across its large size to ensure smooth looping */
+    background-position: 100% 100%; 
+  }
+}
+
+/* The Animated Gradient Overlay Class (Matching BG Image Colors: Cyan/Pink/Purple) */
+.gradient-overlay-animated {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 150, 0.4) 0%,      /* Pink/Magenta */
+    rgba(0, 170, 255, 0.4) 30%,     /* Bright Cyan */
+    rgba(138, 43, 226, 0.4) 60%,    /* Medium Purple */
+    rgba(0, 170, 255, 0.4) 80%,     /* Bright Cyan */
+    rgba(255, 0, 150, 0.4) 100%     /* Pink/Magenta */
+  );
+  /* INCREASED SIZE to 400% to hide rigid seams */
+  background-size: 400% 400%; 
+  /* INCREASED SPEED to 15s and used linear for continuous motion */
+  animation: gradient-shift 15s linear infinite; 
+}
+
+/* Neon Pulse Keyframes (DEFINED ONLY - Triggered in .btn-neon-primary:hover) */
+@keyframes pulse-neon {
+  0%, 100% {
+    /* Subtle, dark glow (Default) */
+    box-shadow: 0 0 3px #003B50, 0 0 8px #005F8F; 
+  }
+  50% {
+    /* Stronger, LIGHTER pulse (Hover) */
+    box-shadow: 0 0 10px #048998, 0 0 25px #00647a; 
+  }
+}
+
+/* --- CUSTOM TAILWIND COMPONENTS (Fixing Button Glow Trigger) --- */
 
 @layer components {
   /* Neon Text Glow Effect (for titles and brand name) */
   .text-neon-glow {
-    text-shadow: 0 0 5px rgba(168, 85, 247, 0.5), /* purple-400 */
-                 0 0 10px rgba(168, 85, 247, 0.4);
+    /* Using a bright aqua glow */
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.5), 
+                 0 0 10px rgba(0, 170, 255, 0.4);
   }
 
-  /* Frosted Glass Base (Glassmorphism effect) */
+  /* Frosted Glass Base (GLASSMORPHISM EFFECT) */
   .glass-card {
-    /* Background: subtle dark transparency */
-    background-color: rgba(30, 41, 59, 0.2); /* slate-800 with 20% opacity */
-    /* Backdrop Blur: the key glass effect */
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    /* Border: subtle light border */
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    /* Shadow: soft inner and outer shadows */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.03); /* Very transparent white */
+    backdrop-filter: blur(10px); 
+    -webkit-backdrop-filter: blur(10px); 
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Lighter border */
+    box-shadow: none; 
   }
 
   /* Neon Gradient Button (Primary CTA) */
   .btn-neon-primary {
-    @apply bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300 ease-in-out relative overflow-hidden;
-    /* Subtle glow */
-    box-shadow: 0 0 15px rgba(109, 40, 217, 0.5); /* violet-700 */
+    /* Using custom dark colors and shadow from the new theme */
+    background-color: #005F8F; /* Dark Blue */
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    /* Initial subtle, dark glow */
+    box-shadow: 0 0 3px #003B50, 0 0 8px #005F8F; 
   }
 
-  .btn-neon-primary:hover {
-    @apply scale-[1.03];
-    box-shadow: 0 0 25px rgba(129, 140, 248, 0.7); /* indigo-300 */
-  }
-
-  /* Filter Pill Active State */
-  .filter-pill-active {
-    @apply bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg;
-    box-shadow: 0 0 10px rgba(129, 140, 248, 0.7); /* indigo-300 glow */
+  .btn-neon-primary:hover:not(:disabled) {
+    /* This section NOW triggers the animation directly */
+    background-color: #00a6ff; /* Aqua */
+    box-shadow: 0 0 15px #14c2d5, 0 0 30px #0b96b6;
+    transform: scale(1.03);
+    
+    /* 🚀 FIX: Apply the animation directly within the hover state */
+    animation: pulse-neon 1.5s ease-in-out infinite; 
   }
 }
